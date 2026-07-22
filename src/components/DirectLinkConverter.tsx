@@ -35,7 +35,14 @@ export const DirectLinkConverter: React.FC<DirectLinkConverterProps> = ({ initia
         body: JSON.stringify({ magnetUri: inputMagnet.trim() })
       });
 
-      const json = await response.json();
+      const text = await response.text();
+      let json: any = {};
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(`服务器响应异常 (${response.status})`);
+      }
+
       if (!response.ok || !json.success) {
         throw new Error(json.error || '生成直链失败');
       }
@@ -64,7 +71,14 @@ export const DirectLinkConverter: React.FC<DirectLinkConverterProps> = ({ initia
         body: formData
       });
 
-      const json = await response.json();
+      const text = await response.text();
+      let json: any = {};
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(`服务器响应异常 (${response.status})`);
+      }
+
       if (!response.ok || !json.success) {
         throw new Error(json.error || '解析文件生成直链失败');
       }

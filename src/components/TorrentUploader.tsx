@@ -83,7 +83,14 @@ export const TorrentUploader: React.FC<TorrentUploaderProps> = ({ onParsed }) =>
         })
       });
 
-      const json = await res.json();
+      const text = await res.text();
+      let json: any = {};
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(`服务器响应异常 (${res.status})`);
+      }
+
       if (!json.success) {
         throw new Error(json.error || '解析 URL / 磁力链失败');
       }

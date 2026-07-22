@@ -147,8 +147,8 @@ echo "Magnet: " . $data['data']['magnetUri'];
     const startTime = performance.now();
 
     try {
+      let res: Response;
       if (testEndpoint === '/api/v1/parse') {
-        let res: Response;
         if (testFile) {
           const fd = new FormData();
           fd.append('file', testFile);
@@ -167,16 +167,26 @@ echo "Magnet: " . $data['data']['magnetUri'];
             })
           });
         }
-
-        const endTime = performance.now();
-        setApiResponseTime(Math.round(endTime - startTime));
-        setApiResponseStatus(res.status);
-
-        const json = await res.json();
-        setApiResponseJson(JSON.stringify(json, null, 2));
+      } else if (testEndpoint === '/api/v1/direct-link') {
+        if (testFile) {
+          const fd = new FormData();
+          fd.append('file', testFile);
+          res = await fetch('/api/v1/direct-link', {
+            method: 'POST',
+            body: fd
+          });
+        } else {
+          res = await fetch('/api/v1/direct-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              magnetUri: testMagnetUri
+            })
+          });
+        }
       } else {
         // Enhance magnet
-        const res = await fetch('/api/v1/enhance-magnet', {
+        res = await fetch('/api/v1/enhance-magnet', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -184,14 +194,20 @@ echo "Magnet: " . $data['data']['magnetUri'];
             preset: 'best'
           })
         });
-
-        const endTime = performance.now();
-        setApiResponseTime(Math.round(endTime - startTime));
-        setApiResponseStatus(res.status);
-
-        const json = await res.json();
-        setApiResponseJson(JSON.stringify(json, null, 2));
       }
+
+      const endTime = performance.now();
+      setApiResponseTime(Math.round(endTime - startTime));
+      setApiResponseStatus(res.status);
+
+      const text = await res.text();
+      let json: any = {};
+      try {
+        json = text ? JSON.parse(text) : { error: 'Empty response body' };
+      } catch {
+        json = { error: `Invalid JSON response: ${text.substring(0, 200)}` };
+      }
+      setApiResponseJson(JSON.stringify(json, null, 2));
     } catch (err: any) {
       setApiResponseStatus(500);
       setApiResponseJson(JSON.stringify({ error: err.message || '网络连接失败' }, null, 2));
