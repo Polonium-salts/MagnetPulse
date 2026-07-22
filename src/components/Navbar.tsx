@@ -1,11 +1,12 @@
 import React from 'react';
 import { ActiveTab } from '../types';
-import { Magnet, FileSearch, Zap, Layers, Code, Server } from 'lucide-react';
+import { Magnet, FileSearch, Zap, Layers, Code, Server, Download } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
 }
+
 
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   return (
@@ -70,6 +71,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           </button>
 
           <button
+            onClick={() => setActiveTab('direct-link')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === 'direct-link'
+                ? 'bg-zinc-100 text-black shadow-sm font-semibold'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900/80'
+            }`}
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">直链下载</span>
+            <span className="sm:hidden">直链</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('api')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'api'
@@ -80,6 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             <Code className="w-3.5 h-3.5" />
             <span>开放 API</span>
           </button>
+
         </nav>
 
         {/* Server Status Indicator */}

@@ -296,8 +296,10 @@ echo "Magnet: " . $data['data']['magnetUri'];
                 className="w-full bg-[#0a0a0a] border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-zinc-500 font-mono"
               >
                 <option value="/api/v1/parse">POST /api/v1/parse (解析种子或磁力链)</option>
+                <option value="/api/v1/direct-link">POST /api/v1/direct-link (转换为 HTTP 直链)</option>
                 <option value="/api/v1/enhance-magnet">POST /api/v1/enhance-magnet (磁力链注入 Tracker)</option>
               </select>
+
             </div>
 
             {testEndpoint === '/api/v1/parse' && (

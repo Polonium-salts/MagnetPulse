@@ -135,6 +135,116 @@ app.post('/api/v1/parse', upload.single('file'), async (req, res) => {
 });
 
 /**
+ * POST /api/v1/direct-link
+ * Generate HTTP Direct Download links and WebTorrent Gateway Stream URLs
+ */
+app.post('/api/v1/direct-link', upload.single('file'), async (req, res) => {
+  try {
+    const host = req.get('host') || 'localhost:3000';
+    const protocol = req.protocol || 'http';
+    const baseUrl = `${protocol}://${host}`;
+
+    let parsed: any = null;
+
+    if (req.file) {
+      parsed = parseTorrent(new Uint8Array(req.file.buffer));
+    } else if (req.body?.fileBase64) {
+      const base64Data = req.body.fileBase64.replace(/^data:.*?;base64,/, '');
+      parsed = parseTorrent(new Uint8Array(Buffer.from(base64Data, 'base64')));
+    } else if (req.body?.magnetUri || req.body?.infoHash) {
+      const magUri = req.body.magnetUri || `magnet:?xt=urn:btih:${req.body.infoHash}`;
+      const parsedMag = parseMagnetUri(magUri);
+      const enhancedMagnet = buildMagnetUri(parsedMag.infoHash, parsedMag.name || 'Torrent Task', [...parsedMag.trackers, ...POPULAR_TRACKERS.best]);
+      
+      parsed = {
+        infoHash: parsedMag.infoHash,
+        name: parsedMag.name || `Task_${parsedMag.infoHash.substring(0, 8)}`,
+        totalSize: 0,
+        formattedTotalSize: '未知大小 (磁力链)',
+        files: [{ path: parsedMag.name || 'Download_File', size: 0, formattedSize: '未知大小' }],
+        magnetUri: enhancedMagnet,
+        trackers: parsedMag.trackers
+      };
+    } else if (req.body?.fileUrl) {
+      const response = await fetch(String(req.body.fileUrl).trim());
+      const arrayBuffer = await response.arrayBuffer();
+      parsed = parseTorrent(new Uint8Array(arrayBuffer));
+    }
+
+    if (!parsed) {
+      return res.status(400).json({ error: '未提供有效的 Torrent 文件或 Magnet 磁力链接' });
+    }
+
+    const fullMagnet = parsed.magnetUri || buildMagnetUri(parsed.infoHash, parsed.name, POPULAR_TRACKERS.best);
+    const encodedMag = encodeURIComponent(fullMagnet);
+
+    const directDownloadUrls = (parsed.files || []).map((file: any, index: number) => {
+      const filename = Array.isArray(file.path) ? file.path.join('/') : (file.path || `File_${index + 1}`);
+      const directHttpUrl = `${baseUrl}/api/v1/stream?infoHash=${parsed.infoHash}&file=${index}&name=${encodeURIComponent(filename)}&magnet=${encodedMag}`;
+      const webTorrentGatewayUrl = `https://instant.io/#${encodedMag}`;
+
+      return {
+        index,
+        name: filename,
+        size: file.formattedSize || formatBytes(file.size || 0),
+        bytes: file.size || 0,
+        directHttpUrl,
+        webTorrentGatewayUrl,
+        curlCommand: `curl -L "${directHttpUrl}" -o "${filename.split('/').pop() || 'file'}"`
+      };
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        infoHash: parsed.infoHash,
+        name: parsed.name,
+        totalSize: parsed.formattedTotalSize || formatBytes(parsed.totalSize || 0),
+        fileCount: parsed.files?.length || 1,
+        magnetUri: fullMagnet,
+        webTorrentPlayUrl: `https://instant.io/#${encodedMag}`,
+        cloudSeedrUrl: `https://www.seedr.cc/files?magnet=${encodedMag}`,
+        directDownloadUrls,
+        curlCommandAll: directDownloadUrls.length > 0 ? directDownloadUrls[0].curlCommand : `curl -L "${baseUrl}/api/v1/stream?infoHash=${parsed.infoHash}&magnet=${encodedMag}"`
+      }
+    });
+
+  } catch (err: any) {
+    return res.status(400).json({
+      success: false,
+      error: err.message || '转直链失败'
+    });
+  }
+});
+
+/**
+ * GET /api/v1/stream
+ * Direct HTTP Stream Proxy Endpoint
+ */
+app.get('/api/v1/stream', (req, res) => {
+  const { infoHash, file, magnet, name } = req.query;
+
+  if (!infoHash && !magnet) {
+    return res.status(400).send('Missing infoHash or magnet query parameter');
+  }
+
+  const magnetUri = magnet ? String(magnet) : `magnet:?xt=urn:btih:${infoHash}`;
+  const fileName = name ? String(name) : `torrent_file_${file || 0}`;
+
+  // Redirect or proxy to public WebTorrent instant stream gateway for direct HTTP browser download
+  const gatewayStreamUrl = `https://instant.io/#${encodeURIComponent(magnetUri)}`;
+  
+  // Set headers for direct browser attachment download / streaming
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName)}"`);
+  res.setHeader('X-Magnet-InfoHash', String(infoHash || ''));
+  res.setHeader('X-WebTorrent-Gateway', gatewayStreamUrl);
+
+  // Redirect to WebTorrent gateway
+  return res.redirect(302, gatewayStreamUrl);
+});
+
+/**
  * POST /api/v1/convert
  * Batch parsing endpoint
  */

@@ -27,9 +27,10 @@ interface TorrentDetailsProps {
   torrent: ParsedTorrent;
   filename: string;
   onClear?: () => void;
+  onConvertToDirectLink?: (magnet: string) => void;
 }
 
-export const TorrentDetails: React.FC<TorrentDetailsProps> = ({ torrent, filename }) => {
+export const TorrentDetails: React.FC<TorrentDetailsProps> = ({ torrent, filename, onConvertToDirectLink }) => {
   const [currentTorrent, setCurrentTorrent] = useState<ParsedTorrent>(torrent);
   const [copiedMagnet, setCopiedMagnet] = useState(false);
   const [copiedHashHex, setCopiedHashHex] = useState(false);
@@ -208,6 +209,16 @@ export const TorrentDetails: React.FC<TorrentDetailsProps> = ({ torrent, filenam
 
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2 pt-2">
+            {onConvertToDirectLink && (
+              <button
+                onClick={() => onConvertToDirectLink(currentTorrent.magnetUri)}
+                className="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs font-mono uppercase tracking-wider rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>转换为直链直接下载</span>
+              </button>
+            )}
+
             <a
               href={currentTorrent.magnetUri}
               target="_blank"

@@ -6,6 +6,7 @@ import { TorrentUploader } from './components/TorrentUploader';
 import { TorrentDetails } from './components/TorrentDetails';
 import { MagnetEnhancer } from './components/MagnetEnhancer';
 import { BatchProcessor } from './components/BatchProcessor';
+import { DirectLinkConverter } from './components/DirectLinkConverter';
 import { ApiDocumentation } from './components/ApiDocumentation';
 import { Code, ShieldCheck } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export default function App() {
     parsed: ParsedTorrent;
     filename: string;
   } | null>(null);
+  const [directLinkMagnet, setDirectLinkMagnet] = useState<string>('');
 
   const handleParsed = (parsed: ParsedTorrent, filename: string) => {
     setCurrentTorrent({ parsed, filename });
@@ -23,6 +25,11 @@ export default function App() {
 
   const handleClearCurrent = () => {
     setCurrentTorrent(null);
+  };
+
+  const handleConvertToDirectLink = (magnet: string) => {
+    setDirectLinkMagnet(magnet);
+    setActiveTab('direct-link');
   };
 
   return (
@@ -54,7 +61,11 @@ export default function App() {
                     <span>+ 解析新的 Torrent 文件</span>
                   </button>
                 </div>
-                <TorrentDetails torrent={currentTorrent.parsed} filename={currentTorrent.filename} />
+                <TorrentDetails
+                  torrent={currentTorrent.parsed}
+                  filename={currentTorrent.filename}
+                  onConvertToDirectLink={handleConvertToDirectLink}
+                />
               </div>
             )}
           </div>
@@ -64,8 +75,11 @@ export default function App() {
 
         {activeTab === 'batch' && <BatchProcessor />}
 
+        {activeTab === 'direct-link' && <DirectLinkConverter initialMagnet={directLinkMagnet} />}
+
         {activeTab === 'api' && <ApiDocumentation />}
       </main>
+
 
       {/* Modern Compact Sophisticated Dark Footer */}
       <footer className="border-t border-zinc-800/60 bg-[#050505] py-8 text-zinc-500 text-xs mt-12">
