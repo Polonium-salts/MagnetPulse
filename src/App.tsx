@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { ActiveTab } from './types';
 import { ParsedTorrent } from './lib/torrentParser';

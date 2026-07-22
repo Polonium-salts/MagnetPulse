@@ -19,7 +19,7 @@ const upload = multer({
 // Enable CORS for API consumers
 app.use('/api', (req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -218,14 +218,14 @@ app.post('/api/v1/direct-link', upload.single('file'), async (req, res) => {
 });
 
 /**
- * GET /api/v1/stream
+ * GET/POST /api/v1/stream
  * Direct HTTP Stream Proxy Endpoint
  */
-app.get('/api/v1/stream', (req, res) => {
-  const { infoHash, file, magnet, name } = req.query;
+app.all('/api/v1/stream', (req, res) => {
+  const { infoHash, file, magnet, name } = { ...req.query, ...req.body };
 
   if (!infoHash && !magnet) {
-    return res.status(400).send('Missing infoHash or magnet query parameter');
+    return res.status(400).json({ error: 'Missing infoHash or magnet query/body parameter' });
   }
 
   const magnetUri = magnet ? String(magnet) : `magnet:?xt=urn:btih:${infoHash}`;
@@ -391,6 +391,11 @@ app.get('/api/v1/openapi.json', (req, res) => {
       }
     }
   });
+});
+
+// Fallback for unhandled API endpoints
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: `API endpoint ${req.method} ${req.path} not found` });
 });
 
 async function startServer() {
