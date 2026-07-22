@@ -1,0 +1,6 @@
+{
+  "name": "Torrent转Magnet解析器",
+  "description": "高性能 Torrent 种子文件解析与 Magnet 磁力链接转换工具，支持多文件解析、Tracker 优化及 REST API",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
