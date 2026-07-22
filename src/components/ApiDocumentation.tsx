@@ -21,7 +21,7 @@ export const ApiDocumentation: React.FC = () => {
   const [copiedCode, setCopiedCode] = useState(false);
 
   // Live API Tester states
-  const [testEndpoint, setTestEndpoint] = useState<'/api/v1/parse' | '/api/v1/enhance-magnet'>('/api/v1/parse');
+  const [testEndpoint, setTestEndpoint] = useState<'/api/v1/parse' | '/api/v1/enhance-magnet' | '/api/v1/direct-link'>('/api/v1/parse');
   const [testMethod, setTestMethod] = useState<'POST'>('POST');
   const [testMagnetUri, setTestMagnetUri] = useState('magnet:?xt=urn:btih:4a2e587a8b9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e&dn=SampleVideo');
   const [testFile, setTestFile] = useState<File | null>(null);

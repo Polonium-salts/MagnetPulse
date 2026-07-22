@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseTorrent, parseMagnetUri, buildMagnetUri, POPULAR_TRACKERS } from '@/src/lib/torrentParser';
 
-export const runtime = 'nodejs'; // Cloudflare Pages supports Node.js APIs or Edge, but since we parse buffers, Node.js is robust.
+export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {

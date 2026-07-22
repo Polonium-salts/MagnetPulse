@@ -6,7 +6,6 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   try {
     const host = req.headers.get('host') || 'localhost:3000';
-    // Trust x-forwarded-proto or fallback to secure/req protocol
     const proto = req.headers.get('x-forwarded-proto') || 'http';
     const baseUrl = `${proto}://${host}`;
 
